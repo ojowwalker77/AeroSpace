@@ -3,6 +3,53 @@ import Foundation
 // TO EVERYONE REVERSE-ENGINEERING THE PROTOCOL
 // client-server socket API is not public yet.
 // Tracking issue for making it public: https://github.com/nikitabobko/AeroSpace/issues/1513
+
+public enum ServerEventType: String, Codable, CaseIterable, Sendable {
+    case focusChanged = "focus-changed"
+    case focusedMonitorChanged = "focused-monitor-changed"
+    case workspaceChanged = "workspace-changed"
+    case modeChanged = "mode-changed"
+    case windowDetected = "window-detected"
+    case bindingTriggered = "binding-triggered"
+}
+
+public struct ServerEvent: Codable, Sendable {
+    public let event: ServerEventType
+    public var windowId: UInt32?
+    public var workspace: String?
+    public var prevWorkspace: String?
+    public var monitorId: Int?
+    public var mode: String?
+    public var appBundleId: String?
+    public var appName: String?
+    public var windowTitle: String?
+    public var binding: String?
+
+    public init(
+        event: ServerEventType,
+        windowId: UInt32? = nil,
+        workspace: String? = nil,
+        prevWorkspace: String? = nil,
+        monitorId: Int? = nil,
+        mode: String? = nil,
+        appBundleId: String? = nil,
+        appName: String? = nil,
+        windowTitle: String? = nil,
+        binding: String? = nil,
+    ) {
+        self.event = event
+        self.windowId = windowId
+        self.workspace = workspace
+        self.prevWorkspace = prevWorkspace
+        self.monitorId = monitorId
+        self.mode = mode
+        self.appBundleId = appBundleId
+        self.appName = appName
+        self.windowTitle = windowTitle
+        self.binding = binding
+    }
+}
+
 public struct ServerAnswer: Codable, Sendable {
     public let exitCode: Int32
     public let stdout: String

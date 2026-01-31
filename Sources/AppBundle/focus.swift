@@ -155,6 +155,11 @@ extension Workspace {
 }
 
 @MainActor private func onFocusedMonitorChanged(_ focus: LiveFocus) {
+    broadcastEvent(ServerEvent(
+        event: .focusedMonitorChanged,
+        workspace: focus.workspace.name,
+        monitorId: focus.workspace.workspaceMonitor.monitorId ?? 0,
+    ))
     if config.onFocusedMonitorChanged.isEmpty { return }
     guard let token: RunSessionGuard = .isServerEnabled else { return }
     // todo potential optimization: don't run runSession if we are already in runSession
@@ -165,6 +170,12 @@ extension Workspace {
     }
 }
 @MainActor private func onFocusChanged(_ focus: LiveFocus) {
+    broadcastEvent(ServerEvent(
+        event: .focusChanged,
+        windowId: focus.windowOrNil?.windowId,
+        workspace: focus.workspace.name,
+        monitorId: focus.workspace.workspaceMonitor.monitorId ?? 0,
+    ))
     if config.onFocusChanged.isEmpty { return }
     guard let token: RunSessionGuard = .isServerEnabled else { return }
     // todo potential optimization: don't run runSession if we are already in runSession
@@ -176,6 +187,11 @@ extension Workspace {
 }
 
 @MainActor private func onWorkspaceChanged(_ oldWorkspace: String, _ newWorkspace: String) {
+    broadcastEvent(ServerEvent(
+        event: .workspaceChanged,
+        workspace: newWorkspace,
+        prevWorkspace: oldWorkspace,
+    ))
     if let exec = config.execOnWorkspaceChange.first {
         let process = Process()
         process.executableURL = URL(filePath: exec)
