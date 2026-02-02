@@ -255,8 +255,7 @@ func tryOnWindowDetected(_ window: Window) async throws {
 
 @MainActor
 private func onWindowDetected(_ window: Window) async throws {
-    broadcastEvent(ServerEvent(
-        event: .windowDetected,
+    broadcastEvent(.windowDetected(
         windowId: window.windowId,
         workspace: window.nodeWorkspace?.name,
         appBundleId: window.app.rawAppBundleId,

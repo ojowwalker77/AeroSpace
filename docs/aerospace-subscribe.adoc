@@ -31,8 +31,8 @@ include::util/conditional-options-header.adoc[]
 
 --all:: Subscribe to all event types
 
-// =========================================================== Events
-== Events
+// =========================================================== Arguments
+include::./util/conditional-arguments-header.adoc[]
 
 The following events can be subscribed to:
 
@@ -40,7 +40,7 @@ focus-changed:: Fired when window focus changes. Includes `windowId`, `workspace
 
 focused-monitor-changed:: Fired when the focused monitor changes. Includes `workspace`, `monitorId`.
 
-workspace-changed:: Fired when the focused workspace changes. Includes `workspace`, `prevWorkspace`.
+focused-workspace-changed:: Fired when the focused workspace changes. Includes `workspace`, `prevWorkspace`.
 
 mode-changed:: Fired when the binding mode changes. Includes `mode`.
 
@@ -55,7 +55,7 @@ Events are output as JSON lines (one JSON object per line):
 
 ----
 {"event":"focus-changed","windowId":1234,"workspace":"1","monitorId":0}
-{"event":"workspace-changed","workspace":"2","prevWorkspace":"1"}
+{"event":"focused-workspace-changed","workspace":"2","prevWorkspace":"1"}
 {"event":"mode-changed","mode":"resize"}
 {"event":"binding-triggered","binding":"alt-1","mode":"main"}
 ----

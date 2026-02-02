@@ -64,7 +64,7 @@ private func newConnection(_ connection: NWConnection) async -> Bool { // Return
         }
         // Handle subscribe before parseCommand (subscribe doesn't have a Command impl)
         if request.args.first == "subscribe" {
-            switch parseSubscribeCmdArgs(Array(request.args.dropFirst()).slice) {
+            switch parseSubscribeCmdArgs(request.args.slice(1...).orDie()) {
                 case .cmd(let subscribeArgs):
                     await handleSubscribe(connection, subscribeArgs)
                     return false // Connection stays open, managed by subscription system
@@ -130,30 +130,38 @@ private func newConnection(_ connection: NWConnection) async -> Bool { // Return
 }
 
 private func handleSubscribe(_ connection: NWConnection, _ args: SubscribeCmdArgs) async {
-    // Get writer and initial state atomically on MainActor
-    let (writer, initialEvents) = await MainActor.run { () -> (ConnectionWriter, [ServerEvent]) in
-        let writer = addSubscriber(connection, events: args.events)
+    let initialEvents = await MainActor.run { () -> [ServerEvent] in
+        addSubscriber(connection, events: args.events)
+        let f = focus
         var events: [ServerEvent] = []
-        if args.events.contains(.focusChanged) || args.events.contains(.focusedMonitorChanged) {
-            let f = focus
-            events.append(ServerEvent(
-                event: .focusChanged,
-                windowId: f.windowOrNil?.windowId,
-                workspace: f.workspace.name,
-                monitorId: f.workspace.workspaceMonitor.monitorId ?? 0,
-            ))
+        for eventType in args.events {
+            switch eventType {
+                case .focusChanged:
+                    events.append(.focusChanged(
+                        windowId: f.windowOrNil?.windowId,
+                        workspace: f.workspace.name,
+                        monitorId: f.workspace.workspaceMonitor.monitorId.map { $0 + 1 } ?? 0,
+                    ))
+                case .focusedMonitorChanged:
+                    events.append(.focusedMonitorChanged(
+                        workspace: f.workspace.name,
+                        monitorId: f.workspace.workspaceMonitor.monitorId.map { $0 + 1 } ?? 0,
+                    ))
+                case .workspaceChanged:
+                    events.append(.workspaceChanged(
+                        workspace: f.workspace.name,
+                        prevWorkspace: f.workspace.name,
+                    ))
+                case .modeChanged:
+                    events.append(.modeChanged(mode: activeMode))
+                case .windowDetected, .bindingTriggered:
+                    break
+            }
         }
-        if args.events.contains(.modeChanged) {
-            events.append(ServerEvent(
-                event: .modeChanged,
-                mode: activeMode,
-            ))
-        }
-        return (writer, events)
+        return events
     }
-    // Write initial events through serialized writer
     for event in initialEvents {
-        _ = await writer.write(event)
+        _ = await connection.write(event)
     }
 
     // Keep connection alive - wait for client to disconnect

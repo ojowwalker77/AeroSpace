@@ -33,8 +33,7 @@ extension HotKey {
         hotkeys[binding.descriptionWithKeyCode] = HotKey(key: binding.keyCode, modifiers: binding.modifiers, keyDownHandler: {
             Task {
                 if let activeMode {
-                    broadcastEvent(ServerEvent(
-                        event: .bindingTriggered,
+                    broadcastEvent(.bindingTriggered(
                         mode: activeMode,
                         binding: binding.descriptionWithKeyNotation,
                     ))
@@ -56,7 +55,7 @@ extension HotKey {
     let oldMode = activeMode
     activeMode = targetMode
     if oldMode != targetMode {
-        broadcastEvent(ServerEvent(event: .modeChanged, mode: targetMode))
+        broadcastEvent(.modeChanged(mode: targetMode))
         if !config.onModeChanged.isEmpty {
             guard let token: RunSessionGuard = .isServerEnabled else { return }
             try await runLightSession(.onModeChanged, token) {

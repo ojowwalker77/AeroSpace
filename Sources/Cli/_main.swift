@@ -131,19 +131,15 @@ func runSubscribe(_ connection: NWConnection, _ args: StrArrSlice, windowId: UIn
         exit(stderrMsg: "Failed to write to server socket: \(e)")
     }
 
-    // Read and print events forever
     while true {
         switch await connection.read() {
             case .success(let data):
-                if let event = try? JSONDecoder().decode(ServerEvent.self, from: data),
-                   let json = try? JSONEncoder().encode(event),
-                   let str = String(data: json, encoding: .utf8)
-                {
+                if let str = String(data: data, encoding: .utf8) {
                     print(str)
                     fflush(stdout)
                 }
             case .failure:
-                exit(0) // Connection closed, exit cleanly
+                exit(0)
         }
     }
 }
